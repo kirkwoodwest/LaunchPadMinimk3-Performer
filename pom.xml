@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.kirkwoodwest</groupId>
+	<artifactId>LaunchPadMiniMk3-Performer</artifactId>
+	<packaging>jar</packaging>
+	<name>LaunchPadMiniMk3-Performer</name>
+	<version>1.0</version>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>16</maven.compiler.source>
+		<maven.compiler.target>16</maven.compiler.target>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>bitwig</id>
+			<name>Bitwig Maven Repository</name>
+			<url>https://maven.bitwig.com</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>com.bitwig</groupId>
+			<artifactId>extension-api</artifactId>
+			<version>18</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala3-library_3</artifactId>
+			<version>3.3.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml -->
+		<dependency>
+			<groupId>org.scala-lang.modules</groupId>
+			<artifactId>scala-xml_3</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.specs2/specs2-core -->
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-core_3</artifactId>
+			<version>5.2.0</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.specs2/specs2-junit -->
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-junit_3</artifactId>
+			<version>5.2.0</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<profiles>
+		<profile>
+			<id>windows-profile</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<!--suppress UnresolvedMavenProperty -->
+				<bitwig.extension.directory>${env.USERPROFILE}/Documents/Bitwig Studio/Extensions</bitwig.extension.directory>
+			</properties>
+		</profile>
+		<profile>
+			<id>mac-profile</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<!--suppress UnresolvedMavenProperty -->
+				<bitwig.extension.directory>${env.HOME}/Documents/Bitwig Studio/Extensions</bitwig.extension.directory>
+			</properties>
+		</profile>
+		<profile>
+			<id>linux-profile</id>
+			<activation>
+				<os>
+					<family>unix</family>
+					<name>Linux</name>
+				</os>
+			</activation>
+			<properties>
+				<bitwig.extension.directory>~/Bitwig Studio/Extensions</bitwig.extension.directory>
+			</properties>
+		</profile>
+	</profiles>
+	<build>
+		<sourceDirectory>src/main/scala</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<version>4.8.1</version>
+				<configuration>
+					<args>
+						<arg>-language:strictEquality</arg>
+<!--						<arg>-unused:imports,privates,locals,explicits</arg>-->
+					</args>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<!-- <goal>testCompile</goal> -->
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<artifactSet>
+								<excludes>
+									<exclude>com.bitwig:extension-api</exclude>
+								</excludes>
+							</artifactSet>
+							<filters>
+								<filter>
+									<!-- Silence overlap warnings -->
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.MF</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>module-info.class</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<minimizeJar>true</minimizeJar>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<optimize>true</optimize>
+					<fork>true</fork>
+					<source>16</source>
+					<target>16</target>
+					<encoding>UTF-8</encoding>
+					<maxmem>1024m</maxmem>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>com.coderplus.maven.plugins</groupId>
+				<artifactId>copy-rename-maven-plugin</artifactId>
+				<version>1.0.1</version>
+				<executions>
+					<execution>
+						<id>install-extension</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
+							<destinationFile>${bitwig.extension.directory}/LaunchPadMiniMk3Performer.bwextension</destinationFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+
