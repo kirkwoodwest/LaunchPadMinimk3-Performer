@@ -32,13 +32,13 @@ Fill Mode:
 
 - Use the Midi Port in / out
 
-Because the track banks are locked they need to be configured using this ui on a per track basis. This is only available in V5.2 Beta. and pre 5.0 releases. 
+Channels need to be configured using this ui on a per project basis. This UI is only available in V5.2 Beta. 
 
 <img width="489" alt="image" src="https://github.com/kirkwoodwest/LaunchPadMinimk3-Performer/assets/6645471/d3a9c894-261a-49f5-9956-79dbdd4e684a">
 
-note: I have some ideas about how to make this go faster. Possibly using a string parser to autofind a track.
+_In the future you'll be able to configure the channels using the pads._
 
-## Building yourself
-This can be build with maven using `mvn clean install`
+# Building the Project
+For those wanting to modify or compile for themselves.Use maven `mvn clean install`
 
-Also special thanks to minortom & carlcaulkett on the #controllerism channel for showing me some Scala ways. More info on that soon!!!
+Also special thanks to minortom & carlcaulkett on the #controllerism channel for showing me some Scala ways. Also shout out to the #controllerism crew!
