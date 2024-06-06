@@ -8,7 +8,7 @@ A 16-track split clip launcher designed around performance playback for the Nova
 ![image](https://github.com/kirkwoodwest/LaunchPadMinimk3-Performer/assets/6645471/a7bee8d2-9a2b-405f-b46a-c364693284d8)
 
 ## Pre-Release Notes:
-Features missing: Arm/Record Functions, Scene Launch Functions
+Features missing: Arm/Record Functions, Scene Launch Functions, Locking Fill
 
 ## Grid    
 - Tracks are fixed in place using Cursor Tracks. A concept unique to Bitwig Studio and its Extension API.
