@@ -1,0 +1,194 @@
+{
+    "version": "1.4.0",
+    "project": {
+        "name": "LaunchPadMiniMk3-Performer-test",
+        "directory": "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer",
+        "workspaceDir": "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer",
+        "sources": [
+            
+        ],
+        "dependencies": [
+            "LaunchPadMiniMk3-Performer"
+        ],
+        "classpath": [
+            "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer/target/test-classes",
+            "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer/target/classes",
+            "/Users/kirkwoodwest/.m2/repository/com/bitwig/extension-api/18/extension-api-18.jar",
+            "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-library_3/3.3.1/scala3-library_3-3.3.1.jar",
+            "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala-library/2.13.10/scala-library-2.13.10.jar",
+            "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-library_3/3.3.1/scala3-library_3-3.3.1.jar",
+            "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala-library/2.13.10/scala-library-2.13.10.jar"
+        ],
+        "out": "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer/target",
+        "classesDir": "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer/target/test-classes",
+        "resources": [
+            "/Users/kirkwoodwest/Documents/Programming/Bitwig Extensions/LaunchPadMinimk3-Performer/src/test/resources"
+        ],
+        "scala": {
+            "organization": "org.scala-lang",
+            "name": "scala-compiler",
+            "version": "3.3.1",
+            "options": [
+                "-language:strictEquality",
+                "-release",
+                "16"
+            ],
+            "jars": [
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-compiler_3/3.3.1/scala3-compiler_3-3.3.1.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/jline/jline-terminal-jna/3.19.0/jline-terminal-jna-3.19.0.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/modules/scala-asm/9.5.0-scala-1/scala-asm-9.5.0-scala-1.jar",
+                "/Users/kirkwoodwest/.m2/repository/com/google/protobuf/protobuf-java/3.7.0/protobuf-java-3.7.0.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/jline/jline-terminal/3.19.0/jline-terminal-3.19.0.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-sbt/util-interface/1.3.0/util-interface-1.3.0.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/tasty-core_3/3.3.1/tasty-core_3-3.3.1.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-interfaces/3.3.1/scala3-interfaces-3.3.1.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-library_3/3.3.1/scala3-library_3-3.3.1.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala-library/2.13.10/scala-library-2.13.10.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/jline/jline-reader/3.19.0/jline-reader-3.19.0.jar",
+                "/Users/kirkwoodwest/.m2/repository/org/scala-sbt/compiler-interface/1.3.5/compiler-interface-1.3.5.jar",
+                "/Users/kirkwoodwest/.m2/repository/net/java/dev/jna/jna/5.3.1/jna-5.3.1.jar"
+            ],
+            "setup": {
+                "order": "mixed",
+                "addLibraryToBootClasspath": true,
+                "addCompilerToClasspath": false,
+                "addExtraJarsToClasspath": false,
+                "manageBootClasspath": true,
+                "filterLibraryFromClasspath": true
+            }
+        },
+        "java": {
+            "options": [
+                "-g",
+                "-target",
+                "16",
+                "-source",
+                "16",
+                "-encoding",
+                "UTF-8"
+            ]
+        },
+        "test": {
+            "frameworks": [
+                {
+                    "names": [
+                        "com.novocode.junit.JUnitFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.scalatest.tools.Framework",
+                        "org.scalatest.tools.ScalaTestFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.scalacheck.ScalaCheckFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.specs.runner.SpecsFramework",
+                        "org.specs2.runner.Specs2Framework",
+                        "org.specs2.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "utest.runner.Framework"
+                    ]
+                },
+                {
+                    "names": [
+                        "munit.Framework"
+                    ]
+                }
+            ],
+            "options": {
+                "excludes": [
+                    
+                ],
+                "arguments": [
+                    {
+                        "args": [
+                            "-v",
+                            "-a"
+                        ],
+                        "framework": {
+                            "names": [
+                                "com.novocode.junit.JUnitFramework"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "platform": {
+            "name": "jvm",
+            "config": {
+                "home": "/Users/kirkwoodwest/Library/Java/JavaVirtualMachines/semeru-18.0.2/Contents/Home",
+                "options": [
+                    
+                ]
+            },
+            "mainClass": [
+                
+            ]
+        },
+        "resolution": {
+            "modules": [
+                {
+                    "organization": "org.scala-lang",
+                    "name": "scala3-library_3",
+                    "version": "3.3.1",
+                    "artifacts": [
+                        {
+                            "name": "scala3-library_3",
+                            "path": "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-library_3/3.3.1/scala3-library_3-3.3.1.jar"
+                        },
+                        {
+                            "name": "scala3-library_3",
+                            "classifier": "sources",
+                            "path": "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala3-library_3/3.3.1/scala3-library_3-3.3.1-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "com.bitwig",
+                    "name": "extension-api",
+                    "version": "18",
+                    "artifacts": [
+                        {
+                            "name": "extension-api",
+                            "path": "/Users/kirkwoodwest/.m2/repository/com/bitwig/extension-api/18/extension-api-18.jar"
+                        },
+                        {
+                            "name": "extension-api",
+                            "classifier": "sources",
+                            "path": "/Users/kirkwoodwest/.m2/repository/com/bitwig/extension-api/18/extension-api-18-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.scala-lang",
+                    "name": "scala-library",
+                    "version": "2.13.10",
+                    "artifacts": [
+                        {
+                            "name": "scala-library",
+                            "path": "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala-library/2.13.10/scala-library-2.13.10.jar"
+                        },
+                        {
+                            "name": "scala-library",
+                            "classifier": "sources",
+                            "path": "/Users/kirkwoodwest/.m2/repository/org/scala-lang/scala-library/2.13.10/scala-library-2.13.10-sources.jar"
+                        }
+                    ]
+                }
+            ]
+        },
+        "tags": [
+            "test"
+        ]
+    }
+}

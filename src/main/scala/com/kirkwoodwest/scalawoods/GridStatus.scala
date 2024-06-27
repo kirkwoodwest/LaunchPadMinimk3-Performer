@@ -15,7 +15,7 @@ class GridStatus(gridButton: GridButton, val clipLauncherSlot: ClipLauncherSlot,
     setStatus()
   })
 
-  GridButtonNote(cursorTrack,this)
+//  GridButtonNote(cursorTrack,this)
 
   override def noteOn(noteOn: Boolean): Unit = {
     this.noteOnStatus = noteOn
@@ -24,8 +24,8 @@ class GridStatus(gridButton: GridButton, val clipLauncherSlot: ClipLauncherSlot,
 
   def setStatus():Unit = {
     if (clipLauncherSlot.isPlaying.get) {
-      if(noteOnStatus) gridButton.setState(GridButtonState.clipPlayingNote)
-      else gridButton.setState(GridButtonState.clipPlaying)
+      if(noteOnStatus) gridButton.setState(GridButtonState.ClipPlayingNote)
+      else gridButton.setState(GridButtonState.ClipPlaying)
     } else if (clipLauncherSlot.isRecording.get) {
       gridButton.setState(GridButtonState.NoteRecording)
     } else if (clipLauncherSlot.hasContent.get) {

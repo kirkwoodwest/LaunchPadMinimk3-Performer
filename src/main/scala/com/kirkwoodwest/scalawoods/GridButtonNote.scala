@@ -6,15 +6,14 @@ import com.kirkwoodwest.scalawoods.utils.LogUtil
 trait GridNote {
   def noteOn(noteOn: Boolean): Unit
 }
+
 class GridButtonNote(cursorTrack: CursorTrack, gridNote: GridNote) {
   private val timer:Boolean = false
   private val numNotes: Int = 0
   var lastNote:Int = -1
   var lastVelocity:Int = -1
-
-
+  
   cursorTrack.playingNotes().addValueObserver((notes: Array[PlayingNote]) => {
-    
     if (notes.length == 0) {
       gridNote.noteOn(false)
       lastNote = -1

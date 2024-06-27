@@ -32,7 +32,7 @@ class LaunchPadMiniExtension(
     //Convert to list  cursorTrackBank.getCursors
     val cursorList =  cursorTrackBank.getCursors.asScala.toList
 
-    DoubleGrid(host, cursorList, hardware)
+    DoubleGrid(host, "DoubleGrid", cursorList, hardware)
     host.println("Initializing LaunchPad Mini Extension")
 
   end init

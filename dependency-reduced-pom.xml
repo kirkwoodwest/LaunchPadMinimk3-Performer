@@ -125,62 +125,6 @@
       <version>18</version>
       <scope>compile</scope>
     </dependency>
-    <dependency>
-      <groupId>org.specs2</groupId>
-      <artifactId>specs2-core_3</artifactId>
-      <version>5.2.0</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>specs2-matcher_3</artifactId>
-          <groupId>org.specs2</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>specs2-common_3</artifactId>
-          <groupId>org.specs2</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>portable-scala-reflect_2.13</artifactId>
-          <groupId>org.portable-scala</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>test-interface</artifactId>
-          <groupId>org.scala-sbt</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.specs2</groupId>
-      <artifactId>specs2-junit_3</artifactId>
-      <version>5.2.0</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>specs2-xml_3</artifactId>
-          <groupId>org.specs2</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>junit-vintage-engine</artifactId>
-          <groupId>org.junit.vintage</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>junit-platform-engine</artifactId>
-          <groupId>org.junit.platform</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>specs2-common_3</artifactId>
-          <groupId>org.specs2</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>portable-scala-reflect_2.13</artifactId>
-          <groupId>org.portable-scala</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>test-interface</artifactId>
-          <groupId>org.scala-sbt</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
   <properties>
     <maven.compiler.target>16</maven.compiler.target>

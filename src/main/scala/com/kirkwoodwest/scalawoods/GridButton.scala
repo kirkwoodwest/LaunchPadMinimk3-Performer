@@ -1,6 +1,7 @@
 package com.kirkwoodwest.scalawoods
 
 import com.bitwig.extension.controller.api.{HardwareButton, MidiIn, MidiOut}
+import com.kirkwoodwest.scalawoods.GridButtonState
 
 class GridButton(val button: HardwareButton, val lightData: LightData):
   protected var isDirty:Boolean = false
@@ -22,25 +23,15 @@ class GridButton(val button: HardwareButton, val lightData: LightData):
     isDirty = true
 
   def flush(): Unit =
-    if(isDirty) {
+    if(isDirty)
       isDirty = false
       var channel: Int = 0
-      if(state.equals(GridButtonState.clipPlaying) || state.equals(GridButtonState.clipPlayingNote)){
+      
+      if (state.equals(GridButtonState.ClipPlaying) || state.equals(GridButtonState.ClipPlayingNote))
         channel = 2
-      }
+      
       lightData.midiOut.sendMidi(0x90 +channel, lightData.note, this.state.value)
-      //do something
-    }
 
 end GridButton
 
 
-enum GridButtonState(val value: Int):
-  case Off extends GridButtonState(0)
-  case HasClip extends GridButtonState(103)
-  case clipPlaying extends GridButtonState(43)
-  case clipPlayingNote extends GridButtonState(41)
-  case NoteRecording extends GridButtonState(60)
-  case NoteOffRecording extends GridButtonState(70)
-
-case class LightData(val midiOut:MidiOut, val note: Int, var velocity: Int)

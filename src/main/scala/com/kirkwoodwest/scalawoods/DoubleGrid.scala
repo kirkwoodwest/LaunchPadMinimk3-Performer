@@ -1,236 +1,299 @@
 package com.kirkwoodwest.scalawoods
+
 import com.bitwig.extension.controller.api.*
-import com.kirkwoodwest.scalawoods.values.SettableBooleanValueImpl
+import com.kirkwoodwest.scalawoods.GridButtonState
 
-
-import java.util
-import java.util.function.Supplier
-import scala.collection.mutable.ListBuffer
-
+import scala.collection.mutable
 
 class DoubleGrid(
-                 val host: ControllerHost,
-                 val cursorTrackList: List[CursorTrack],
-                 val hardware: HardwareLaunchPadMiniMK3) {
+                  val host: ControllerHost,
+                  val id: String,
+                  val cursorTrackList: List[CursorTrack],
+                  val hardware: HardwareLaunchPadMiniMK3
+                ) {
+  val clipLauncherSlotBanks: Seq[ClipLauncherSlotBank] = cursorTrackList.map { cursorTrack =>
+    cursorTrack.clipLauncherSlotBank
+  }
 
-  val gridButtonBasePressed: ListBuffer[Runnable] = ListBuffer[Runnable]()
-  val gridButtonBaseReleased: ListBuffer[Runnable] = ListBuffer[Runnable]()
-  val GridButtonAltPressed: ListBuffer[Runnable] = ListBuffer[Runnable]()
-  val GridButtonAltReleased: ListBuffer[Runnable] = ListBuffer[Runnable]()
-  val normalMode: SettableBooleanValueImpl = new SettableBooleanValueImpl(true)
-  val altMode: SettableBooleanValueImpl = new SettableBooleanValueImpl(false)
+  val sceneBank: SceneBank = host.createSceneBank(4)
 
-  val buttonActions: Array[Array[List[HardwareActionBindable]]] = Array.ofDim[List[HardwareActionBindable]](8, 8)
+  var launchSceneModeActive: Boolean = false
+  val clipButtonActions: Array[Array[mutable.HashMap[ActionID, HardwareActionBindable]]] =
+    Array.ofDim[mutable.HashMap[ActionID, HardwareActionBindable]](8, 8)
+
+  for {
+    i <- clipButtonActions.indices
+    j <- clipButtonActions(i).indices
+  } {
+    clipButtonActions(i)(j) = mutable.HashMap.empty[ActionID, HardwareActionBindable]
+  }
 
   var altLaunchModeActive: Boolean = false
+  var stopModeActive: Boolean = false
   val transport: Transport = host.createTransport
   transport.isClipLauncherOverdubEnabled.markInterested()
   transport.isClipLauncherAutomationWriteEnabled.markInterested()
 
-  //Setup Fill Mode
-  hardware.getSceneButton(0).button.pressedAction.addBinding(transport.isFillModeActive.setToTrueAction())
-  hardware.getSceneButton(0).button.releasedAction.addBinding(transport.isFillModeActive.setToFalseAction())
-  hardware.getSceneButton(0).setDirty()
+  // Setup Fill Mode
+  hardware
+    .getSceneButton(0)
+    .button
+    .pressedAction
+    .addBinding(transport.isFillModeActive.setToTrueAction())
+  hardware
+    .getSceneButton(0)
+    .button
+    .releasedAction
+    .addBinding(transport.isFillModeActive.setToFalseAction())
+  hardware.getSceneButton(ButtonIndexes.FillActive).setDirty()
 
+  //Fill Led
   transport.isFillModeActive.addValueObserver((active: Boolean) => {
-    if(active) {
-      hardware.getSceneButton(0).setState(GridButtonState.clipPlaying)
+    if (active) {
+      hardware.getSceneButton(0).setState(GridButtonState.ClipPlaying)
     } else {
       hardware.getSceneButton(0).setState(GridButtonState.HasClip)
     }
   })
 
-  hardware.getSceneButton(1).setDirty()
-  hardware.getGridButton(1,0).setDirty()
+  // Alternate Launch Mode
+  val launchModeToggle: HardwareActionBindable = host.createAction(
+    () => {
+      toggleLaunchModeState()
+    },
+    () => "Alt Launch Mode Active"
+  )
 
-  //Alternate Launch Mode
-  val altModeOn: HardwareActionBindable  = host.createAction(() => {
-    setLaunchModeState(true)
-  }, () => "Alt Launch Mode Active")
-
-  val altModeOff: HardwareActionBindable = host.createAction(() => {
-    setLaunchModeState(false)
-  }, () => "Alt Launch Mode Inactive")
-
-  hardware.getSceneButton(1).button.pressedAction().addBinding(altModeOff)
-  hardware.getSceneButton(2).button.pressedAction().addBinding(altModeOn)
-
-  normalMode.addValueObserver((active: Boolean) => {
-    if (active) {
-      hardware.getSceneButton(1).setState(GridButtonState.clipPlaying)
-    } else {
-      hardware.getSceneButton(1).setState(GridButtonState.HasClip)
-    }
-  } )
-
-  altMode.addValueObserver((active: Boolean) => {
-    if (active) {
-      hardware.getSceneButton(2).setState(GridButtonState.clipPlaying)
-    } else {
-      hardware.getSceneButton(2).setState(GridButtonState.HasClip)
-    }
-  })
-
-  //Setup buttons for moving up and down the grid
-  val clipLauncherUp: HardwareActionBindable = host.createAction(() => {
-    moveClipLauncher(-1)
-  }, () => "Move Grid Up")
-  val clipLauncherDown: HardwareActionBindable = host.createAction(() => {
-    moveClipLauncher(1)
-  }, () => "Move Grid Down")
+  // Setup buttons for moving up and down the grid
+  val clipLauncherUp: HardwareActionBindable = host.createAction(
+    () => {
+      moveClipLauncher(-1)
+    },
+    () => "Move Grid Up"
+  )
+  val clipLauncherDown: HardwareActionBindable = host.createAction(
+    () => {
+      moveClipLauncher(1)
+    },
+    () => "Move Grid Down"
+  )
 
   hardware.getFuncButton(0).button.pressedAction().addBinding(clipLauncherUp)
   hardware.getFuncButton(1).button.pressedAction().addBinding(clipLauncherDown)
 
-    //Loop through cursor track list and build out the clip launcher slots
+  //Scene Mode
+  val launchSceneActiveAction: HardwareActionBindable = host.createAction(
+    () => {
+      setSceneLaunchMode(true)
+    },
+    () => "LaunchScene Mode Active"
+  )
+  val launchSceneInactiveAction: HardwareActionBindable = host.createAction(
+    () => {
+       setSceneLaunchMode(false)
+    },
+    () => "LaunchScene Mode Deactive"
+  )
+  hardware.getSceneButton(ButtonIndexes.LaunchScene).button.pressedAction().addBinding(launchSceneActiveAction)
+  hardware.getSceneButton(ButtonIndexes.LaunchScene).button.releasedAction().addBinding(launchSceneInactiveAction)
+
+  //Stop Mode
+  val stopModeActiveAction: HardwareActionBindable = host.createAction(
+    () => {
+      setStopMode(true)
+    },
+    () => "Stop Mode Active"
+  )
+  val stopModeInactiveAction: HardwareActionBindable = host.createAction(
+    () => {
+      setStopMode(false)
+    },
+    () => "Stop Mode Inactive"
+  )
+  hardware.getSceneButton(ButtonIndexes.Stop).button.pressedAction().addBinding(stopModeActiveAction)
+  hardware.getSceneButton(ButtonIndexes.Stop).button.releasedAction().addBinding(stopModeInactiveAction)
+
+  // Loop through cursor track list and build out the clip launcher slots
   createButtonBindings()
-  bindGridButtons()
+  updateState()
 
-  
 
-  private def setupSuppliersForLights(): Unit = {
-    cursorTrackList.zipWithIndex.foreach { case (cursorTrack, trackIndex) =>
-      val clipLauncherSlotBank: ClipLauncherSlotBank = cursorTrack.clipLauncherSlotBank
-      clipLauncherSlotBank.cursorIndex().markInterested()
-      val sizeOfBank = clipLauncherSlotBank.getSizeOfBank
-      for (row_index <- 0 until sizeOfBank) {
-        val (c, r) = buttonMap(trackIndex, row_index)
-        val slot: ClipLauncherSlot = clipLauncherSlotBank.getItemAt(row_index)
-        slot.color.markInterested()
 
-      }
-    }
-  }
-  
+  private def setStopMode(bool: Boolean): Unit =
+    stopModeActive = bool
+    updateState()
 
-  // private def setupClipCallbacks(trackIndex: Int, cursorTrack: CursorTrack, clipLauncherSlotBank: ClipLauncherSlotBank): Unit = {
-  //   // Host
-  //   clipLauncherSlotBank.addIsPlayingObserver((index: Int, status: Boolean) => {
-  //     if (trackIndex < 8) {
-  //       if (index < 8) {
-  //         //this.clip_grid_status(trackIndex)(index).setIsPlaying(status)
-  //       }
-  //     }
-  //   })
+  private def setSceneLaunchMode(active:Boolean): Unit =
+    launchSceneModeActive = active
+    updateState()
 
-  //   clipLauncherSlotBank.addIsRecordingObserver((index: Int, status: Boolean) => {
-  //   })
-
-  //   clipLauncherSlotBank.addHasContentObserver((index: Int, status: Boolean) => {
-  //     if (trackIndex < 8) {
-  //       if (!status) {
-  //         if (hardware != null) {
-  //           //hardware.clearGridColor(trackIndex, index)
-  //         }
-  //       }
-  //     }
-  //   })
-    
-  //   val isPlaybackQueued: IndexedBooleanValueChangedCallback = (index: Int, status: Boolean) => {
-  //   }
-    
-  //   clipLauncherSlotBank.addIsPlaybackQueuedObserver(isPlaybackQueued)
-  //   val isStopQueued: IndexedBooleanValueChangedCallback = (index: Int, status: Boolean) => {
-  //   }
-    
-  //   clipLauncherSlotBank.addIsStopQueuedObserver(isStopQueued)
-  //   val isRecordingQueued: IndexedBooleanValueChangedCallback = (index: Int, status: Boolean) => {
-  //   }
-    
-  //   clipLauncherSlotBank.addIsRecordingQueuedObserver(isRecordingQueued)
-  // }
-
-  def setLaunchModeState(state: Boolean): Unit = {
-    if (state) {
-      bindGridAltButtons()
+  private def updateState(): Unit = {
+    if(stopModeActive) {
+      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.NoteRecording)
     } else {
-      bindGridButtons()
+      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.ClipPlaying)
+    }
+    if (launchSceneModeActive && !stopModeActive) {
+      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonState.NoteRecording)
+
+      if (altLaunchModeActive) {
+        bindSceneAltButtonsClips()
+        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.NoteRecording)
+      } else {
+        bindSceneButtonsClips()
+        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.ClipPlaying)
+      }
+    } else if (stopModeActive) {
+        bindStopButtons()
+        hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.ClipPlaying)
+    } else {
+      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonState.HasClip)
+      bindGridButtonsClips()
+      if(altLaunchModeActive) {
+        bindGridAltButtonsClips()
+        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.NoteRecording)
+      } else {
+        bindGridButtonsClips()
+        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.ClipPlaying)
+      }
+      hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonState.HasClip)
     }
   }
+  private def toggleLaunchModeState(): Unit = {
+    // Implement the state toggling logic here
+    altLaunchModeActive = !altLaunchModeActive
+    updateState()
+  }
 
-  def buttonMap(col: Int, row: Int): (Int, Int) = {
-    //if col >= 8 then we should wrap and increase the row by 4
+  
+  private def buttonMap(col: Int, row: Int): (Int, Int) = {
     var r = row
     if (col >= 8) {
       r = row + 4
     }
-
     (col % 8, r)
   }
-  
-  def createButtonBindings(): Unit = {
-    cursorTrackList.zipWithIndex.foreach { case (cursorTrack, trackIndex) =>
-      val clipLauncherSlotBank: ClipLauncherSlotBank = cursorTrack.clipLauncherSlotBank
+
+  private def createButtonBindings(): Unit = {
+    clipLauncherSlotBanks.zipWithIndex.foreach { (clipLauncherSlotBank, trackIndex) =>
       clipLauncherSlotBank.scrollPosition().markInterested()
       val sizeOfBank = clipLauncherSlotBank.getSizeOfBank
+
       for (row_index <- 0 until sizeOfBank) {
         val (c, r) = buttonMap(trackIndex, row_index)
         val clipLauncherSlot: ClipLauncherSlot = clipLauncherSlotBank.getItemAt(row_index)
-        val launchAction:HardwareActionBindable =  clipLauncherSlot.launchAction()
-        val launchReleaseAction:HardwareActionBindable = clipLauncherSlot.launchReleaseAction()
-        val launchAltAction:HardwareActionBindable = clipLauncherSlot.launchAltAction()
-        val launchReleaseAltAction:HardwareActionBindable = clipLauncherSlot.launchReleaseAltAction()
+        val launchAction: HardwareActionBindable = clipLauncherSlot.launchAction()
+        val launchReleaseAction: HardwareActionBindable = clipLauncherSlot.launchReleaseAction()
+        val launchAltAction: HardwareActionBindable = clipLauncherSlot.launchAltAction()
+        val launchReleaseAltAction: HardwareActionBindable = clipLauncherSlot.launchReleaseAltAction()
+        val stopAction: HardwareActionBindable = clipLauncherSlotBank.stopAction()
+        val stopAltAction: HardwareActionBindable = clipLauncherSlotBank.stopAltAction()
 
-        //put each action into a list
-        val actions = List(launchAction, launchReleaseAction, launchAltAction, launchReleaseAltAction)
+        val sceneLaunchAction: HardwareActionBindable = sceneBank.getItemAt(row_index).launchAction()
+        val sceneAltLaunchAction: HardwareActionBindable = sceneBank.getItemAt(row_index).launchAltAction()
+        val sceneReleaseAction: HardwareActionBindable = sceneBank.getItemAt(row_index).launchReleaseAction()
+        val sceneAltReleaseAction: HardwareActionBindable = sceneBank.getItemAt(row_index).launchReleaseAltAction()
 
-        //store actions into a list retreivable by c and r
-        buttonActions(c)(r) = actions
+        val actions = mutable.HashMap[ActionID, HardwareActionBindable](
+          ActionID.ClipLaunch -> launchAction,
+          ActionID.ClipLaunchRelease -> launchReleaseAction,
+          ActionID.ClipAltLaunch -> launchAltAction,
+          ActionID.ClipAltLaunchRelease -> launchReleaseAltAction,
+          ActionID.ClipStop -> stopAction,
+          ActionID.SceneLaunch -> sceneLaunchAction,
+          ActionID.SceneAltLaunch -> sceneAltLaunchAction,
+          ActionID.SceneLaunchRelease -> sceneReleaseAction,
+          ActionID.SceneAltLaunchRelease -> sceneAltReleaseAction,
+        )
 
-        //Bind Lights to States
+        clipButtonActions(c)(r) = actions
+
         val gridButton: GridButton = hardware.getGridButton(c, r)
-        val gridStatus = GridStatus(gridButton, clipLauncherSlot, cursorTrack)
-        
-        
-        
-        
+        val gridStatus = GridStatus(gridButton, clipLauncherSlot, cursorTrackList(trackIndex))
       }
     }
   }
 
-  private def bindGridButtons(): Unit = {
-    //Loop through the buttonActions and bind the actions to the hardware
-    for (col <- 0 until 8) {
-      for (row <- 0 until 8) {
-        val actions = buttonActions(col)(row)
-        val launchAction = actions(0)
-        val launchReleaseAction = actions(1)
-
-        hardware.getGridButton(col, row).button.pressedAction().setBinding(launchAction)
-        hardware.getGridButton(col, row).button.releasedAction().setBinding(launchReleaseAction)
-      }
-    }
-
-    altMode.set(false)
-    normalMode.set(true)
+  private def bindGridButtonsClips(): Unit = {
+    bindActionsToGrid(ActionID.ClipLaunch, ActionID.ClipLaunchRelease)
   }
 
-  def bindGridAltButtons(): Unit = {
-    //Loop through the buttonActions and bind the actions to the hardware
+  private def bindGridAltButtonsClips(): Unit = {
+    bindActionsToGrid(ActionID.ClipAltLaunch, ActionID.ClipAltLaunchRelease)
+  }
+
+  private def bindSceneButtonsClips(): Unit = {
+    bindActionsToGrid(ActionID.SceneLaunch, ActionID.SceneLaunchRelease)
+  }
+
+  private def bindSceneAltButtonsClips(): Unit = {
+    bindActionsToGrid(ActionID.SceneAltLaunch, ActionID.SceneAltLaunchRelease)
+  }
+
+  private def bindStopButtons(): Unit = {
+    bindActionsToGrid(ActionID.ClipStop, null)
+  }
+  private def bindStopAltButtons(): Unit = {
+    bindActionsToGrid(ActionID.ClipAltStop, null)
+  }
+
+  private def bindActionsToGrid(pressedAction: ActionID, releasedAction: ActionID): Unit = {
     for (col <- 0 until 8) {
       for (row <- 0 until 8) {
-        val actions = buttonActions(col)(row)
-        val launchAltAction = actions(2)
-        val launchReleaseAltAction = actions(3)
-
-         hardware.getGridButton(col, row).button.pressedAction().setBinding(launchAltAction)
-         hardware.getGridButton(col, row).button.releasedAction().setBinding(launchReleaseAltAction)
+        bindActionsToGridButton(col, row, pressedAction, releasedAction)
       }
     }
-    altMode.set(true)
-    normalMode.set(false)
+  }
 
+  private def bindActionsToGridButton(col:Int, row:Int, pressedAction:ActionID, releasedAction:ActionID): Unit = {
+    val actions = clipButtonActions(col)(row)
+    if(pressedAction != null)
+      val action = actions(pressedAction)
+      hardware.getGridButton(col, row).button.pressedAction().setBinding(action)
+    else
+      hardware.getGridButton(col, row).button.pressedAction().clearBindings()
+    if (releasedAction != null)
+      val action = actions(releasedAction)
+      hardware.getGridButton(col, row).button.releasedAction().setBinding(action)
+    else
+      hardware.getGridButton(col, row).button.releasedAction().clearBindings()
   }
 
   def moveClipLauncher(direction: Int): Unit = {
-    var steps:Int = direction * 4
+    val steps: Int = direction * 4
     cursorTrackList.zipWithIndex.foreach { case (cursorTrack, trackIndex) =>
       val clipLauncherSlotBank: ClipLauncherSlotBank = cursorTrack.clipLauncherSlotBank
       val index = clipLauncherSlotBank.scrollPosition().get
       val sizeOfBank = clipLauncherSlotBank.getSizeOfBank
-      for (row_index <- 0 until sizeOfBank) {
-        clipLauncherSlotBank.scrollPosition().set(index + steps)
-      }
+      clipLauncherSlotBank.scrollPosition().set(index + steps)
     }
   }
 }
+
+//Scene Button Indexes
+private object ButtonIndexes {
+  val FillActive: Int = 0
+  val FillAlt: Int = 1
+  val LaunchMode: Int = 2
+  val LaunchScene: Int = 3
+  val Record: Int = 4
+  val Stop: Int = 5
+}
+
+enum Modes:
+  case  Clip,
+        ClipAlt,
+        Scene,
+        SceneAlt
+
+enum ActionID:
+  case  ClipLaunch,
+        ClipLaunchRelease,
+        ClipAltLaunch,
+        ClipAltLaunchRelease,
+        SceneLaunch,
+        SceneLaunchRelease,
+        SceneAltLaunch,
+        SceneAltLaunchRelease,
+        ClipStop,
+        ClipAltStop

@@ -1,7 +1,6 @@
 package com.kirkwoodwest.scalawoods
 
 import com.kirkwoodwest.scalawoods.utils.MidiUtil
-
 import com.bitwig.extension.api.Color
 import com.bitwig.extension.callback.ShortMidiDataReceivedCallback
 import com.bitwig.extension.controller.api.*

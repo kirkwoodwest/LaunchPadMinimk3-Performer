@@ -19,10 +19,15 @@ public class BooleanValueImpl implements BooleanValue {
 
 
   public void set(boolean b) {
+    do_something(b);
     if (this.value != b) {
       this.value = b;
       notifyObservers();
     }
+  }
+
+  private void do_something(boolean b) {
+    //party on dude.
   }
 
   @Override
