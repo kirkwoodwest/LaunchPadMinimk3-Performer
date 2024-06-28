@@ -2,9 +2,10 @@ package com.kirkwoodwest.launchpadminimk3;
 
 import com.bitwig.extension.controller.api.*;
 import com.kirkwoodwest.launchpadminimk3.hardware.GridButton;
-import com.kirkwoodwest.launchpadminimk3.hardware.GridButtonState;
+import com.kirkwoodwest.launchpadminimk3.hardware.GridButtonColor;
 import com.kirkwoodwest.launchpadminimk3.hardware.HardwareLaunchPadMiniMK3;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +19,14 @@ public class DoubleGrid {
   private final SceneBank sceneBank;
   private boolean launchSceneModeActive;
   private final Map<ActionID, HardwareActionBindable>[][] clipButtonActions;
+  private ArrayList<ArrayList<GridStatus>> gridStatus;
+  private DoubleGridState doubleGridState;
   private boolean altLaunchModeActive;
   private boolean stopModeActive;
+  private boolean recordModeActive;
   private final Transport transport;
+  private boolean deleteModeActive;
+
 
   public DoubleGrid(ControllerHost host, String id, List<CursorTrack> cursorTrackList, HardwareLaunchPadMiniMK3 hardware) {
     this.host = host;
@@ -34,11 +40,14 @@ public class DoubleGrid {
     this.sceneBank = host.createSceneBank(4);
     this.launchSceneModeActive = false;
     this.clipButtonActions = new HashMap[8][8];
+
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         this.clipButtonActions[i][j] = new HashMap<>();
       }
     }
+
+
     this.altLaunchModeActive = false;
     this.stopModeActive = false;
     this.transport = host.createTransport();
@@ -51,15 +60,15 @@ public class DoubleGrid {
   }
 
   private void setupHardware() {
-    hardware.getSceneButton(0).getButton().pressedAction().addBinding(transport.isFillModeActive().setToTrueAction());
-    hardware.getSceneButton(0).getButton().releasedAction().addBinding(transport.isFillModeActive().setToFalseAction());
+    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().pressedAction().addBinding(transport.isFillModeActive().setToTrueAction());
+    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().releasedAction().addBinding(transport.isFillModeActive().setToFalseAction());
     hardware.getSceneButton(ButtonIndexes.FillActive).setDirty();
 
     transport.isFillModeActive().addValueObserver(active -> {
       if (active) {
-        hardware.getSceneButton(0).setState(GridButtonState.ClipPlaying);
+        hardware.getSceneButton(0).setState(GridButtonColor.FillModeActive);
       } else {
-        hardware.getSceneButton(0).setState(GridButtonState.HasClip);
+        hardware.getSceneButton(0).setState(GridButtonColor.FillModeInactive);
       }
     });
 
@@ -75,10 +84,33 @@ public class DoubleGrid {
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().pressedAction().addBinding(launchSceneActiveAction);
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().releasedAction().addBinding(launchSceneInactiveAction);
 
+    hardware.getSceneButton(ButtonIndexes.LaunchMode).getButton().pressedAction().addBinding(launchModeToggle);
+
     HardwareActionBindable stopModeActiveAction = host.createAction(() -> setStopMode(true), () -> "Stop Mode Active");
     HardwareActionBindable stopModeInactiveAction = host.createAction(() -> setStopMode(false), () -> "Stop Mode Inactive");
     hardware.getSceneButton(ButtonIndexes.Stop).getButton().pressedAction().addBinding(stopModeActiveAction);
     hardware.getSceneButton(ButtonIndexes.Stop).getButton().releasedAction().addBinding(stopModeInactiveAction);
+
+    HardwareActionBindable recordModeActiveAction = host.createAction(() -> setRecordMode(true), () -> "Record Mode Active");
+    HardwareActionBindable recordModeInactiveAction = host.createAction(() -> setRecordMode(false), () -> "Record Mode Inactive");
+    hardware.getSceneButton(ButtonIndexes.Record).getButton().pressedAction().addBinding(recordModeActiveAction);
+    hardware.getSceneButton(ButtonIndexes.Record).getButton().releasedAction().addBinding(recordModeInactiveAction);
+
+    //Delete Mode
+    HardwareActionBindable deleteModeActiveAction = host.createAction(() -> setDeleteMode(true), () -> "Delete Mode Active");
+    HardwareActionBindable deleteModeInactiveAction = host.createAction(() -> setDeleteMode(false), () -> "Delete Mode Inactive");
+    hardware.getSceneButton(ButtonIndexes.Delete).getButton().pressedAction().addBinding(deleteModeActiveAction);
+    hardware.getSceneButton(ButtonIndexes.Delete).getButton().releasedAction().addBinding(deleteModeInactiveAction);
+  }
+
+  private void setDeleteMode(boolean b) {
+    deleteModeActive = b;
+    updateState();
+  }
+
+  private void setRecordMode(boolean b) {
+    recordModeActive = b;
+    updateState();
   }
 
   private void setStopMode(boolean bool) {
@@ -93,35 +125,76 @@ public class DoubleGrid {
 
   private void updateState() {
     if (stopModeActive) {
-      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.NoteRecording);
-    } else {
-      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.ClipPlaying);
-    }
-    if (launchSceneModeActive && !stopModeActive) {
-      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonState.NoteRecording);
+      if (altLaunchModeActive) {
+        bindStop();
+        doubleGridState = DoubleGridState.StopAltMode;
+      } else {
+        bindStopAlt();
+        doubleGridState = DoubleGridState.StopMode;
+      }
+    } else if (deleteModeActive) {
+      bindActionsToGrid(ActionID.ClipDelete, null);
+      doubleGridState = DoubleGridState.DeleteMode;
+    } else if (launchSceneModeActive) {
       if (altLaunchModeActive) {
         bindSceneAltButtonsClips();
-        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.NoteRecording);
+        doubleGridState = DoubleGridState.SceneAltMode;
       } else {
         bindSceneButtonsClips();
-        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.ClipPlaying);
+        doubleGridState = DoubleGridState.SceneMode;
       }
-    } else if (stopModeActive) {
-      bindStopButtons();
-      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonState.ClipPlaying);
-    } else {
-      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonState.HasClip);
-      bindGridButtonsClips();
+    } else if (recordModeActive){
       if (altLaunchModeActive) {
-        bindGridAltButtonsClips();
-        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.NoteRecording);
+        bindRecordMode();
+        doubleGridState = DoubleGridState.RecordAltMode;
       } else {
-        bindGridButtonsClips();
-        hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonState.ClipPlaying);
-      }
-      hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonState.HasClip);
+        bindRecordMode();
+        doubleGridState = DoubleGridState.RecordMode;
     }
+    } else {
+      if (altLaunchModeActive) {
+        bindLaunchAlt();
+        doubleGridState = DoubleGridState.LaunchAltMode;
+      } else {
+        bindLaunch();
+        doubleGridState = DoubleGridState.LaunchMode;
+      }
+    }
+
+    //Update State Observers
+    gridStatus.forEach(track -> track.forEach(gridStatus -> gridStatus.setGridState(doubleGridState)));
+
+    if(launchSceneModeActive) {
+      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonColor.SceneModeActive);
+    } else {
+      hardware.getSceneButton(ButtonIndexes.LaunchScene).setState(GridButtonColor.SceneModeInactive);
+    }
+    if (stopModeActive) {
+      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonColor.StopModeActive);
+    } else {
+      hardware.getSceneButton(ButtonIndexes.Stop).setState(GridButtonColor.StopModeInactive);
+    }
+
+    if (altLaunchModeActive) {
+      hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonColor.LaunchAltMode);
+    } else {
+      hardware.getSceneButton(ButtonIndexes.LaunchMode).setState(GridButtonColor.LaunchNormalMode);
+    }
+
+    if(recordModeActive) {
+      hardware.getSceneButton(ButtonIndexes.Record).setState(GridButtonColor.NoteRecording);
+    } else {
+      hardware.getSceneButton(ButtonIndexes.Record).setState(GridButtonColor.NoteOffRecording);
+    }
+
+    if(deleteModeActive) {
+      hardware.getSceneButton(ButtonIndexes.Delete).setState(GridButtonColor.DeleteClipPlaying);
+    } else {
+      hardware.getSceneButton(ButtonIndexes.Delete).setState(GridButtonColor.DeleteHasClip);
+    }
+
   }
+
 
   private void toggleLaunchModeState() {
     altLaunchModeActive = !altLaunchModeActive;
@@ -136,54 +209,56 @@ public class DoubleGrid {
   }
 
   private void createButtonBindings() {
+    gridStatus = new ArrayList<>(8);
     for (int trackIndex = 0; trackIndex < cursorTrackList.size(); trackIndex++) {
       CursorTrack cursorTrack = cursorTrackList.get(trackIndex);
       ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks[trackIndex];
       clipLauncherSlotBank.scrollPosition().markInterested();
       int sizeOfBank = clipLauncherSlotBank.getSizeOfBank();
-
+      gridStatus.add(new ArrayList<>(sizeOfBank));
       for (int rowIndex = 0; rowIndex < sizeOfBank; rowIndex++) {
         int[] mappedButton = buttonMap(trackIndex, rowIndex);
         int col = mappedButton[0];
         int row = mappedButton[1];
         ClipLauncherSlot clipLauncherSlot = clipLauncherSlotBank.getItemAt(rowIndex);
-        HardwareActionBindable launchAction = clipLauncherSlot.launchAction();
-        HardwareActionBindable launchReleaseAction = clipLauncherSlot.launchReleaseAction();
-        HardwareActionBindable launchAltAction = clipLauncherSlot.launchAltAction();
-        HardwareActionBindable launchReleaseAltAction = clipLauncherSlot.launchReleaseAltAction();
-        HardwareActionBindable stopAction = clipLauncherSlotBank.stopAction();
-        HardwareActionBindable stopAltAction = clipLauncherSlotBank.stopAltAction();
-        HardwareActionBindable sceneLaunchAction = sceneBank.getItemAt(rowIndex).launchAction();
-        HardwareActionBindable sceneAltLaunchAction = sceneBank.getItemAt(rowIndex).launchAltAction();
-        HardwareActionBindable sceneReleaseAction = sceneBank.getItemAt(rowIndex).launchReleaseAction();
-        HardwareActionBindable sceneAltReleaseAction = sceneBank.getItemAt(rowIndex).launchReleaseAltAction();
 
+        //Map Actions
         Map<ActionID, HardwareActionBindable> actions = new HashMap<>();
-        actions.put(ActionID.ClipLaunch, launchAction);
-        actions.put(ActionID.ClipLaunchRelease, launchReleaseAction);
-        actions.put(ActionID.ClipAltLaunch, launchAltAction);
-        actions.put(ActionID.ClipAltLaunchRelease, launchReleaseAltAction);
-        actions.put(ActionID.ClipStop, stopAction);
-        actions.put(ActionID.ClipAltStop, stopAltAction);
-        actions.put(ActionID.SceneLaunch, sceneLaunchAction);
-        actions.put(ActionID.SceneAltLaunch, sceneAltLaunchAction);
-        actions.put(ActionID.SceneLaunchRelease, sceneReleaseAction);
-        actions.put(ActionID.SceneAltLaunchRelease, sceneAltReleaseAction);
+        actions.put(ActionID.ClipLaunch, clipLauncherSlot.launchAction());
+        actions.put(ActionID.ClipLaunchRelease, clipLauncherSlot.launchReleaseAction());
+        actions.put(ActionID.ClipAltLaunch,  clipLauncherSlot.launchAltAction());
+        actions.put(ActionID.ClipAltLaunchRelease, clipLauncherSlot.launchReleaseAltAction());
+        actions.put(ActionID.ClipStop, clipLauncherSlotBank.stopAction());
+        actions.put(ActionID.ClipAltStop, clipLauncherSlotBank.stopAltAction());
+        actions.put(ActionID.SceneLaunch, sceneBank.getItemAt(rowIndex).launchAction());
+        actions.put(ActionID.SceneAltLaunch, sceneBank.getItemAt(rowIndex).launchAltAction());
+        actions.put(ActionID.SceneLaunchRelease, sceneBank.getItemAt(rowIndex).launchReleaseAction());
+        actions.put(ActionID.SceneAltLaunchRelease, sceneBank.getItemAt(rowIndex).launchReleaseAltAction());
+        actions.put(ActionID.RecordMode, clipLauncherSlot.recordAction());
+        actions.put(ActionID.ClipDelete, clipLauncherSlot.deleteObjectAction());
 
         clipButtonActions[col][row] = actions;
 
         GridButton gridButton = hardware.getGridButton(col, row);
-        new GridStatus(gridButton, clipLauncherSlot, cursorTrackList.get(trackIndex));
+
+        gridStatus.get(trackIndex).add(new GridStatus(hardware.getGridButton(col, row), clipLauncherSlot, cursorTrack));
       }
     }
   }
 
-  private void bindGridButtonsClips() {
+  private void bindLaunch() {
     bindActionsToGrid(ActionID.ClipLaunch, ActionID.ClipLaunchRelease);
   }
 
-  private void bindGridAltButtonsClips() {
+  private void bindLaunchAlt() {
     bindActionsToGrid(ActionID.ClipAltLaunch, ActionID.ClipAltLaunchRelease);
+  }
+  private void bindStop() {
+    bindActionsToGrid(ActionID.ClipStop, null);
+  }
+
+  private void bindStopAlt() {
+    bindActionsToGrid(ActionID.ClipAltStop, null);
   }
 
   private void bindSceneButtonsClips() {
@@ -197,6 +272,11 @@ public class DoubleGrid {
   private void bindStopButtons() {
     bindActionsToGrid(ActionID.ClipStop, null);
   }
+
+  private void bindRecordMode() {
+    bindActionsToGrid(ActionID.RecordMode, ActionID.ClipLaunchRelease);
+  }
+
 
   private void bindActionsToGrid(ActionID pressedAction, ActionID releasedAction) {
     for (int col = 0; col < 8; col++) {
@@ -235,8 +315,10 @@ public class DoubleGrid {
     static final int FillAlt = 1;
     static final int LaunchMode = 2;
     static final int LaunchScene = 3;
-    static final int Record = 4;
-    static final int Stop = 5;
+
+    static final int Stop = 4;
+    static final int Record = 5;
+    static final int Delete = 6;
   }
 
   // ActionID Enum
@@ -250,14 +332,9 @@ public class DoubleGrid {
     SceneAltLaunch,
     SceneAltLaunchRelease,
     ClipStop,
-    ClipAltStop
+    ClipAltStop,
+    ClipDelete,
+    RecordMode;
   }
 
-  // Modes Enum
-  public enum Modes {
-    Clip,
-    ClipAlt,
-    Scene,
-    SceneAlt
-  }
 }

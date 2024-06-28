@@ -2,12 +2,14 @@ package com.kirkwoodwest.launchpadminimk3.hardware;
 
 import com.bitwig.extension.controller.api.HardwareButton;
 import com.bitwig.extension.controller.api.MidiIn;
+import com.kirkwoodwest.launchpadminimk3.DoubleGridState;
 
 public class GridButton {
     private final HardwareButton button;
     private final LightData lightData;
     private boolean isDirty = false;
-    private GridButtonState state = GridButtonState.Off;
+    private GridButtonColor state = GridButtonColor.Off;
+    private DoubleGridState doubleGridState = DoubleGridState.LaunchMode;
 
     public GridButton(HardwareButton button, LightData lightData) {
         this.button = button;
@@ -24,7 +26,7 @@ public class GridButton {
         button.releasedAction().setActionMatcher(midiIn.createCCActionMatcher(0, cc, 0));
     }
 
-    public void setState(GridButtonState state) {
+    public void setState(GridButtonColor state) {
         this.state = state;
         isDirty = true;
     }
@@ -38,7 +40,7 @@ public class GridButton {
             isDirty = false;
             int channel = 0;
 
-            if (state.equals(GridButtonState.ClipPlaying) || state.equals(GridButtonState.ClipPlayingNote)) {
+            if (state.equals(GridButtonColor.ClipPlaying) || state.equals(GridButtonColor.ClipPlayingNote)) {
                 channel = 2;
             }
 
@@ -52,5 +54,9 @@ public class GridButton {
 
     public LightData getLightData() {
         return lightData;
+    }
+
+    public void setGridState(DoubleGridState doubleGridState) {
+        this.doubleGridState = doubleGridState;
     }
 }
