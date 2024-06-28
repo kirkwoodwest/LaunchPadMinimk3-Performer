@@ -72,20 +72,25 @@ public class DoubleGrid {
       }
     });
 
-    HardwareActionBindable launchModeToggle = host.createAction(() -> toggleLaunchModeState(), () -> "Alt Launch Mode Active");
+    //Move Clip Launcher Grid
     HardwareActionBindable clipLauncherUp = host.createAction(() -> moveClipLauncher(-1), () -> "Move Grid Up");
     HardwareActionBindable clipLauncherDown = host.createAction(() -> moveClipLauncher(1), () -> "Move Grid Down");
 
     hardware.getFuncButton(0).getButton().pressedAction().addBinding(clipLauncherUp);
     hardware.getFuncButton(1).getButton().pressedAction().addBinding(clipLauncherDown);
 
+    //Launch Mode Toggle
+    HardwareActionBindable launchModeToggle = host.createAction(() -> toggleLaunchModeState(), () -> "Alt Launch Mode Active");
+    hardware.getSceneButton(ButtonIndexes.LaunchMode).getButton().pressedAction().addBinding(launchModeToggle);
+
+
     HardwareActionBindable launchSceneActiveAction = host.createAction(() -> setSceneLaunchMode(true), () -> "LaunchScene Mode Active");
     HardwareActionBindable launchSceneInactiveAction = host.createAction(() -> setSceneLaunchMode(false), () -> "LaunchScene Mode Deactive");
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().pressedAction().addBinding(launchSceneActiveAction);
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().releasedAction().addBinding(launchSceneInactiveAction);
 
-    hardware.getSceneButton(ButtonIndexes.LaunchMode).getButton().pressedAction().addBinding(launchModeToggle);
 
+    //Stop Button
     HardwareActionBindable stopModeActiveAction = host.createAction(() -> setStopMode(true), () -> "Stop Mode Active");
     HardwareActionBindable stopModeInactiveAction = host.createAction(() -> setStopMode(false), () -> "Stop Mode Inactive");
     hardware.getSceneButton(ButtonIndexes.Stop).getButton().pressedAction().addBinding(stopModeActiveAction);
@@ -194,7 +199,6 @@ public class DoubleGrid {
     }
 
   }
-
 
   private void toggleLaunchModeState() {
     altLaunchModeActive = !altLaunchModeActive;
@@ -336,5 +340,4 @@ public class DoubleGrid {
     ClipDelete,
     RecordMode;
   }
-
 }
