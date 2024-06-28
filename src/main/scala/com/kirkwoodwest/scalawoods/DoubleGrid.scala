@@ -11,6 +11,7 @@ class DoubleGrid(
                   val cursorTrackList: List[CursorTrack],
                   val hardware: HardwareLaunchPadMiniMK3
                 ) {
+
   val clipLauncherSlotBanks: Seq[ClipLauncherSlotBank] = cursorTrackList.map { cursorTrack =>
     cursorTrack.clipLauncherSlotBank
   }

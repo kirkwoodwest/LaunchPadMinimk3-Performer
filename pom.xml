@@ -27,11 +27,7 @@
 			<artifactId>extension-api</artifactId>
 			<version>18</version>
 		</dependency>
-		<dependency>
-			<groupId>org.scala-lang</groupId>
-			<artifactId>scala3-library_3</artifactId>
-			<version>3.3.1</version>
-		</dependency>
+
 <!--		&lt;!&ndash; https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml &ndash;&gt;-->
 <!--		<dependency>-->
 <!--			<groupId>org.scala-lang.modules</groupId>-->
@@ -79,27 +75,7 @@
 		</profile>
 	</profiles>
 	<build>
-		<sourceDirectory>src/main/scala</sourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>net.alchim31.maven</groupId>
-				<artifactId>scala-maven-plugin</artifactId>
-				<version>4.8.1</version>
-				<configuration>
-					<args>
-						<arg>-language:strictEquality</arg>
-<!--						<arg>-unused:imports,privates,locals,explicits</arg>-->
-					</args>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-							<!-- <goal>testCompile</goal> -->
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>

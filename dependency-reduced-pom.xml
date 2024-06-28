@@ -6,7 +6,7 @@
   <name>LaunchPadMiniMk3-Performer</name>
   <version>1.0</version>
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
     <plugins>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
