@@ -13,6 +13,9 @@
       <destName>LaunchPadMiniMk3Performer.bwextension</destName>
     </file>
     <file>
+      <source>src/main/resources/LaunchPadMiniMk3Performer.json</source>
+    </file>
+    <file>
       <source>LICENSE</source>
     </file>
   </files>

@@ -7,13 +7,15 @@ import com.kirkwoodwest.launchpadminimk3.DoubleGridState;
 public class GridButton {
     private final HardwareButton button;
     private final LightData lightData;
+    private final GridButtonColorMapper colorMapper;
     private boolean isDirty = false;
     private GridButtonColor state = GridButtonColor.Off;
     private DoubleGridState doubleGridState = DoubleGridState.LaunchMode;
 
-    public GridButton(HardwareButton button, LightData lightData) {
+    public GridButton(HardwareButton button, LightData lightData, GridButtonColorMapper colorMapper) {
         this.button = button;
         this.lightData = lightData;
+        this.colorMapper = colorMapper;
     }
 
     public void setupNoteButton(MidiIn midiIn, int note) {
@@ -39,8 +41,8 @@ public class GridButton {
         if (isDirty) {
             isDirty = false;
 
-            int vel = this.state.getValue()[0];
-            int channel = this.state.getValue()[1];
+            int vel = colorMapper.getVelocity(this.state);
+            int channel = colorMapper.getChannel(this.state);
 
             lightData.getMidiOut().sendMidi(0x90 + channel, lightData.getNote(), vel);
         }

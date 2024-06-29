@@ -48,3 +48,14 @@ _In the future you'll be able to configure the channels using the pads._
 For those wanting to modify or compile for themselves.Use maven `mvn clean install`
 
 Also special thanks to minortom & carlcaulkett on the #controllerism channel for showing me some Scala ways. Also shout out to the #controllerism crew!
+
+
+## Upcoming Features (In No Particular Order)
+- Color State Customization via Json
+- Clip Editing
+
+# License
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+# Acknowledgments
+- Novation for making the Launchpad Mini Mk3, Bitwig Studio for making awesome DAW and API, n9research for assisting with design, and the Bitwig Community for the support.

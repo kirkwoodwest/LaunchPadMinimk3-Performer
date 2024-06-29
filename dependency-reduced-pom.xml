@@ -4,27 +4,9 @@
   <groupId>com.kirkwoodwest</groupId>
   <artifactId>LaunchPadMiniMk3-Performer</artifactId>
   <name>LaunchPadMiniMk3-Performer</name>
-  <version>1.0</version>
+  <version>0.5-alpha</version>
   <build>
-    <sourceDirectory>src/main/java</sourceDirectory>
     <plugins>
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>4.8.1</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <args>
-            <arg>-language:strictEquality</arg>
-          </args>
-        </configuration>
-      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.6.0</version>
@@ -85,6 +67,26 @@
             <configuration>
               <sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
               <destinationFile>${bitwig.extension.directory}/LaunchPadMiniMk3Performer.bwextension</destinationFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>release.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+              <finalName>${project.build.finalName}-release</finalName>
             </configuration>
           </execution>
         </executions>

@@ -3,6 +3,7 @@ package com.kirkwoodwest.launchpadminimk3.hardware;
 import com.bitwig.extension.callback.ShortMidiDataReceivedCallback;
 import com.bitwig.extension.controller.api.*;
 import com.kirkwoodwest.openwoods.hardware.HardwareBasic;
+import com.kirkwoodwest.openwoods.utils.FileUtil;
 import com.kirkwoodwest.openwoods.utils.MidiUtil;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class HardwareLaunchPadMiniMK3 extends HardwareBasic {
     private final List<List<GridButton>> gridButtons;
     private final List<GridButton> hardwareFuncButtons;
     private final List<GridButton> hardwareSceneButtons;
+    private final GridButtonColorMapper colorMapper;
 
     public HardwareLaunchPadMiniMK3(ControllerHost host, int midi_port, ShortMidiDataReceivedCallback input_callback) {
         super(host.getMidiInPort(midi_port), host.getMidiOutPort(midi_port));
@@ -27,6 +29,10 @@ public class HardwareLaunchPadMiniMK3 extends HardwareBasic {
         this.hardwareSurface = host.createHardwareSurface();
         this.baseHardwareName = "LPM" + midi_port + "_";
 
+        colorMapper = new GridButtonColorMapper();
+
+        String path = FileUtil.getPath(host, "LaunchPadMiniMk3Performer.json");
+        colorMapper.load(path);
         this.gridMap = new int[8][8];
         this.gridButtons = new ArrayList<>(8);
         for (int i = 0; i < 8; i++) {
@@ -48,7 +54,7 @@ public class HardwareLaunchPadMiniMK3 extends HardwareBasic {
                 String nameLight = baseHardwareName + "grid_light_" + row + "_" + col;
                 String nameButton = baseHardwareName + "grid_button_" + row + "_" + col;
                 HardwareButton button = hardwareSurface.createHardwareButton(nameButton);
-                GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), note, 123));
+                GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), note, 123), colorMapper);
                 gridButton.setupNoteButton(getMidiIn(), note);
                 gridButtons.get(col).add(gridButton);
             }
@@ -62,7 +68,7 @@ public class HardwareLaunchPadMiniMK3 extends HardwareBasic {
             String nameLight = baseHardwareName + "_func_light_" + i;
             String nameButton = baseHardwareName + "_func_button_" + i;
             HardwareButton button = hardwareSurface.createHardwareButton(nameButton);
-            GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), cc, 123));
+            GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), cc, 123), colorMapper);
             gridButton.setupCCButton(getMidiIn(), cc);
             hardwareFuncButtons.add(gridButton);
         }
@@ -75,7 +81,7 @@ public class HardwareLaunchPadMiniMK3 extends HardwareBasic {
             String nameLight = baseHardwareName + "_scenes_light_" + i;
             String nameButton = baseHardwareName + "_scene_button_" + i;
             HardwareButton button = hardwareSurface.createHardwareButton(nameButton);
-            GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), cc, 123));
+            GridButton gridButton = new GridButton(button, new LightData(getMidiOut(), cc, 123), colorMapper);
             gridButton.setupCCButton(getMidiIn(), cc);
             hardwareSceneButtons.add(gridButton);
         }
