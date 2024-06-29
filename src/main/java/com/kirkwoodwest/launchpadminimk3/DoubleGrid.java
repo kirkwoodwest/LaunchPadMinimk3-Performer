@@ -15,8 +15,8 @@ public class DoubleGrid {
   private final String id;
   private final List<CursorTrack> cursorTrackList;
   private final HardwareLaunchPadMiniMK3 hardware;
-  private final ClipLauncherSlotBank[] clipLauncherSlotBanks;
-  private final SceneBank sceneBank;
+  private final List<ClipLauncherSlotBank> clipLauncherSlotBanks = new ArrayList<>();
+  private final SceneLauncher sceneLauncher;
   private boolean launchSceneModeActive;
   private final Map<ActionID, HardwareActionBindable>[][] clipButtonActions;
   private ArrayList<ArrayList<GridStatus>> gridStatus;
@@ -33,11 +33,10 @@ public class DoubleGrid {
     this.id = id;
     this.cursorTrackList = cursorTrackList;
     this.hardware = hardware;
-    this.clipLauncherSlotBanks = new ClipLauncherSlotBank[cursorTrackList.size()];
     for (int i = 0; i < cursorTrackList.size(); i++) {
-      this.clipLauncherSlotBanks[i] = cursorTrackList.get(i).clipLauncherSlotBank();
+      clipLauncherSlotBanks.add(cursorTrackList.get(i).clipLauncherSlotBank());
     }
-    this.sceneBank = host.createSceneBank(4);
+
     this.launchSceneModeActive = false;
     this.clipButtonActions = new HashMap[8][8];
 
@@ -54,7 +53,12 @@ public class DoubleGrid {
     this.transport.isClipLauncherOverdubEnabled().markInterested();
     this.transport.isClipLauncherAutomationWriteEnabled().markInterested();
 
+
+    //Create Scene Launcher
+    sceneLauncher = new SceneLauncher(host, 4, clipLauncherSlotBanks);
     setupHardware();
+    //Create Scene Launcher
+
     createButtonBindings();
     updateState();
   }
@@ -216,10 +220,11 @@ public class DoubleGrid {
     gridStatus = new ArrayList<>(8);
     for (int trackIndex = 0; trackIndex < cursorTrackList.size(); trackIndex++) {
       CursorTrack cursorTrack = cursorTrackList.get(trackIndex);
-      ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks[trackIndex];
+      ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks.get(trackIndex);
       clipLauncherSlotBank.scrollPosition().markInterested();
       int sizeOfBank = clipLauncherSlotBank.getSizeOfBank();
       gridStatus.add(new ArrayList<>(sizeOfBank));
+
       for (int rowIndex = 0; rowIndex < sizeOfBank; rowIndex++) {
         int[] mappedButton = buttonMap(trackIndex, rowIndex);
         int col = mappedButton[0];
@@ -234,10 +239,12 @@ public class DoubleGrid {
         actions.put(ActionID.ClipAltLaunchRelease, clipLauncherSlot.launchReleaseAltAction());
         actions.put(ActionID.ClipStop, clipLauncherSlotBank.stopAction());
         actions.put(ActionID.ClipAltStop, clipLauncherSlotBank.stopAltAction());
-        actions.put(ActionID.SceneLaunch, sceneBank.getItemAt(rowIndex).launchAction());
-        actions.put(ActionID.SceneAltLaunch, sceneBank.getItemAt(rowIndex).launchAltAction());
-        actions.put(ActionID.SceneLaunchRelease, sceneBank.getItemAt(rowIndex).launchReleaseAction());
-        actions.put(ActionID.SceneAltLaunchRelease, sceneBank.getItemAt(rowIndex).launchReleaseAltAction());
+        //Scene
+        Scene scene = sceneLauncher.getScene(rowIndex);
+        actions.put(ActionID.SceneLaunch, scene.sceneLaunch());
+        actions.put(ActionID.SceneAltLaunch, scene.sceneAltLaunch());
+        actions.put(ActionID.SceneLaunchRelease, scene.launchSceneRelease());
+        actions.put(ActionID.SceneAltLaunchRelease, scene.launchAltSceneRelease());
         actions.put(ActionID.RecordMode, clipLauncherSlot.recordAction());
         actions.put(ActionID.ClipDelete, clipLauncherSlot.deleteObjectAction());
 
@@ -307,7 +314,7 @@ public class DoubleGrid {
   public void moveClipLauncher(int direction) {
     int steps = direction * 4;
     for (int trackIndex = 0; trackIndex < cursorTrackList.size(); trackIndex++) {
-      ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks[trackIndex];
+      ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks.get(trackIndex);
       int index = clipLauncherSlotBank.scrollPosition().get();
       clipLauncherSlotBank.scrollPosition().set(index + steps);
     }
