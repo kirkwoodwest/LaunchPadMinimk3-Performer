@@ -38,13 +38,11 @@ public class GridButton {
     public void flush() {
         if (isDirty) {
             isDirty = false;
-            int channel = 0;
 
-            if (state.equals(GridButtonColor.ClipPlaying) || state.equals(GridButtonColor.ClipPlayingNote)) {
-                channel = 2;
-            }
+            int vel = this.state.getValue()[0];
+            int channel = this.state.getValue()[1];
 
-            lightData.getMidiOut().sendMidi(0x90 + channel, lightData.getNote(), this.state.getValue());
+            lightData.getMidiOut().sendMidi(0x90 + channel, lightData.getNote(), vel);
         }
     }
 

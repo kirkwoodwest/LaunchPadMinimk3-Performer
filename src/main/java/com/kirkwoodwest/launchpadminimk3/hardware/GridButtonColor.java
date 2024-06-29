@@ -1,50 +1,53 @@
 package com.kirkwoodwest.launchpadminimk3.hardware;
 
 public enum GridButtonColor {
-    Off(0),
-    HasClip(103),
-    ClipPlaying(43),
-    ClipPlayingNote(41),
+    Off(new int[]{0, 0}),
+    HasClip(new int[]{103,0}),
+    ClipPlaying(new int[]{43,2}),
+    ClipPlayingNote(new int[]{41,2}),
 
-    AltHasClip(12),
-    AltClipPlaying(15),
-    AltClipPlayingNote(13),
+    AltHasClip(new int[]{12,0}),
+    AltClipPlaying(new int[]{15,2}),
+    AltClipPlayingNote(new int[]{13,2}),
 
-    SceneHasClip(16),
-    SceneClipPlaying(18),
-    SceneClipPlayingNote(17),
+    SceneHasClip(new int[]{16,0}),
+    SceneClipPlaying(new int[]{18,2}),
+    SceneClipPlayingNote(new int[]{17,2}),
 
-    SceneAltHasClip(20),
-    SceneAltClipPlaying(22),
-    SceneAltClipPlayingNote(21),
+    SceneAltHasClip(new int[]{20,0}),
+    SceneAltClipPlaying(new int[]{22,2}),
+    SceneAltClipPlayingNote(new int[]{21,2}),
 
-    StopHasClip(55),
-    StopClipPlaying(59),
-    StopClipPlayingNote(57),
+    StopHasClip(new int[]{23,0}),
+    StopClipPlaying(new int[]{25,2}),
+    StopClipPlayingNote(new int[]{24,2}),
 
-    DeleteHasClip(107),
-    DeleteClipPlaying(107),
-    DeleteClipPlayingNote(4),
+    NoteRecording(new int[]{60,0}),
+    NoteOffRecording(new int[]{70,0}),
+    LaunchNormalMode(new int[]{41,0}),
+    LaunchAltMode(new int[]{13,0}),
 
-    NoteRecording(60),
-    NoteOffRecording(70),
-    LaunchNormalMode(41),
-    LaunchAltMode(13),
-    FillModeActive(9),
-    FillModeInactive(8),
+    FillModeActive(new int[]{9,0}),
+    FillModeInactive(new int[]{8,0}),
+    FillModeBar(new int[]{9,2}),
+    FillModeLocked(new int[]{84,0}),
 
-    SceneModeActive(17),
-    SceneModeInactive(19),
-    StopModeActive(59),
-    StopModeInactive(57);
+    SceneModeActive(new int[]{17,0}),
+    SceneModeInactive(new int[]{19,0}),
+    StopModeActive(new int[]{59,0}),
+    StopModeInactive(new int[]{57,0}),
 
-    private final int value;
+    DeleteClipPlaying(new int[]{25,0}),
+    DeleteClipPlayingNote(new int[]{24,0}),
+    DeleteHasClip(new int[]{23,0});
 
-    GridButtonColor(int value) {
+    private final int[] value;
+
+    GridButtonColor(int[] value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public int[] getValue() {
         return value;
     }
 }

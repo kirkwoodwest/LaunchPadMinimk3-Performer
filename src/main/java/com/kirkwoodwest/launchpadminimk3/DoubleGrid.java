@@ -17,6 +17,7 @@ public class DoubleGrid {
   private final HardwareLaunchPadMiniMK3 hardware;
   private final List<ClipLauncherSlotBank> clipLauncherSlotBanks = new ArrayList<>();
   private final SceneLauncher sceneLauncher;
+  private final Fill fill;
   private boolean launchSceneModeActive;
   private final Map<ActionID, HardwareActionBindable>[][] clipButtonActions;
   private ArrayList<ArrayList<GridStatus>> gridStatus;
@@ -33,6 +34,11 @@ public class DoubleGrid {
     this.id = id;
     this.cursorTrackList = cursorTrackList;
     this.hardware = hardware;
+
+    //Fill
+    fill = new Fill(host, host.createTransport());
+
+
     for (int i = 0; i < cursorTrackList.size(); i++) {
       clipLauncherSlotBanks.add(cursorTrackList.get(i).clipLauncherSlotBank());
     }
@@ -64,16 +70,42 @@ public class DoubleGrid {
   }
 
   private void setupHardware() {
-    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().pressedAction().addBinding(transport.isFillModeActive().setToTrueAction());
-    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().releasedAction().addBinding(transport.isFillModeActive().setToFalseAction());
+    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().pressedAction().addBinding(fill.getFillPressedAction());
+    hardware.getSceneButton(ButtonIndexes.FillActive).getButton().releasedAction().addBinding(fill.getFillReleasedAction());
     hardware.getSceneButton(ButtonIndexes.FillActive).setDirty();
+    hardware.getSceneButton(ButtonIndexes.FillAlt).getButton().pressedAction().addBinding(fill.getFillOptionPressedAction());
+    hardware.getSceneButton(ButtonIndexes.FillAlt).setDirty();
 
-    transport.isFillModeActive().addValueObserver(active -> {
-      if (active) {
-        hardware.getSceneButton(0).setState(GridButtonColor.FillModeActive);
+    Runnable updateLed = () -> {
+      boolean option = this.fill.isFillOptionActive().get();
+      boolean fill = this.fill.isFillModeActive().get();
+      boolean locked = this.fill.isFillModeLocked().get();
+
+      if (option){
+        hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonColor.FillModeBar);
+        hardware.getSceneButton(ButtonIndexes.FillAlt).setState(GridButtonColor.FillModeBar);
+      } else if ( locked) {
+        hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonColor.FillModeLocked);
+        hardware.getSceneButton(ButtonIndexes.FillAlt).setState(GridButtonColor.FillModeLocked);
+      } else if (fill) {
+        hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonColor.FillModeActive);
+        hardware.getSceneButton(ButtonIndexes.FillAlt).setState(GridButtonColor.FillModeInactive);
       } else {
-        hardware.getSceneButton(0).setState(GridButtonColor.FillModeInactive);
+        hardware.getSceneButton(ButtonIndexes.FillActive).setState(GridButtonColor.FillModeInactive);
+        hardware.getSceneButton(ButtonIndexes.FillAlt).setState(GridButtonColor.FillModeInactive);
       }
+    };
+
+    fill.isFillModeActive().addValueObserver(active -> {
+      updateLed.run();
+    });
+
+    fill.isFillOptionActive().addValueObserver(active -> {
+      updateLed.run();
+    });
+
+    fill.isFillModeLocked().addValueObserver(active -> {
+      updateLed.run();
     });
 
     //Move Clip Launcher Grid
@@ -87,12 +119,10 @@ public class DoubleGrid {
     HardwareActionBindable launchModeToggle = host.createAction(() -> toggleLaunchModeState(), () -> "Alt Launch Mode Active");
     hardware.getSceneButton(ButtonIndexes.LaunchMode).getButton().pressedAction().addBinding(launchModeToggle);
 
-
     HardwareActionBindable launchSceneActiveAction = host.createAction(() -> setSceneLaunchMode(true), () -> "LaunchScene Mode Active");
     HardwareActionBindable launchSceneInactiveAction = host.createAction(() -> setSceneLaunchMode(false), () -> "LaunchScene Mode Deactive");
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().pressedAction().addBinding(launchSceneActiveAction);
     hardware.getSceneButton(ButtonIndexes.LaunchScene).getButton().releasedAction().addBinding(launchSceneInactiveAction);
-
 
     //Stop Button
     HardwareActionBindable stopModeActiveAction = host.createAction(() -> setStopMode(true), () -> "Stop Mode Active");
