@@ -8,6 +8,7 @@ A Different Clip Launcher &amp; Performance System For Bitwig Studio.
 
 A 16-track split clip launcher designed around performance playback for the Novation Launchpad Mini Mk3.
 
+This is a pre-production image and does not reflect the current state of the alpha release.
 ![image](https://github.com/kirkwoodwest/LaunchPadMinimk3-Performer/assets/6645471/a7bee8d2-9a2b-405f-b46a-c364693284d8)
 
 ## Pre-Release Notes:
