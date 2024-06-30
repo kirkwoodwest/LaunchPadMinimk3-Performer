@@ -19,6 +19,7 @@ public class DoubleGrid {
   private final SceneLauncher sceneLauncher;
   private final Fill fill;
   private final SceneBank sceneBank;
+  private final CopySlots copySlots;
   private boolean launchSceneModeActive;
   private final Map<ActionID, HardwareActionBindable>[][] clipButtonActions;
   private ArrayList<ArrayList<GridStatus>> gridStatus;
@@ -27,8 +28,12 @@ public class DoubleGrid {
   private boolean stopModeActive;
   private boolean recordModeActive;
   private boolean duplicateModeActive;
+  private boolean copyModeActive;
   private final Transport transport;
   private boolean deleteModeActive;
+
+  private CursorTrack floatingCursorTrack;
+  private boolean pasteModeActive;
 
 
   public DoubleGrid(ControllerHost host, String id, List<CursorTrack> cursorTrackList, HardwareLaunchPadMiniMK3 hardware) {
@@ -36,6 +41,9 @@ public class DoubleGrid {
     this.id = id;
     this.cursorTrackList = cursorTrackList;
     this.hardware = hardware;
+
+    //Used to copy slots
+    this.copySlots = new CopySlots(host);
 
     //Indicate where the scenes are
     this.sceneBank = host.createSceneBank(4);
@@ -48,6 +56,7 @@ public class DoubleGrid {
     for (int i = 0; i < cursorTrackList.size(); i++) {
       ClipLauncherSlotBank clipLauncherSlotBank = cursorTrackList.get(i).clipLauncherSlotBank();
       clipLauncherSlotBanks.add(clipLauncherSlotBank);
+
     }
 
     this.launchSceneModeActive = false;
@@ -152,6 +161,27 @@ public class DoubleGrid {
     HardwareActionBindable duplicateModeInactiveAction = host.createAction(() -> setDuplicateMode(false), () -> "Duplicate Mode Inactive");
     hardware.getSceneButton(ButtonIndexes.Duplicate).getButton().pressedAction().addBinding(duplicateModeActiveAction);
     hardware.getSceneButton(ButtonIndexes.Duplicate).getButton().releasedAction().addBinding(duplicateModeInactiveAction);
+
+    //Copy Mode
+    HardwareActionBindable copyModeActiveAction = host.createAction(() -> setCopyMode(true), () -> "Copy Mode Active");
+    HardwareActionBindable copyModeInactiveAction = host.createAction(() -> setCopyMode(false), () -> "Copy Mode Inactive");
+    hardware.getFuncButton(5).getButton().pressedAction().addBinding(copyModeActiveAction);
+    hardware.getFuncButton(5).getButton().releasedAction().addBinding(copyModeInactiveAction);
+    //Paste Mode
+    HardwareActionBindable pasteModeActiveAction = host.createAction(() -> setPasteMode(true), () -> "Paste Mode Active");
+    HardwareActionBindable pasteModeInactiveAction = host.createAction(() -> setPasteMode(false), () -> "Paste Mode Inactive");
+    hardware.getFuncButton(7).getButton().pressedAction().addBinding(pasteModeActiveAction);
+    hardware.getFuncButton(7).getButton().releasedAction().addBinding(pasteModeInactiveAction);
+  }
+
+  private void setPasteMode(boolean b) {
+    pasteModeActive = b;
+    updateState();
+  }
+
+  private void setCopyMode(boolean b) {
+    copyModeActive = b;
+    updateState();
   }
 
   private void setDuplicateMode(boolean b) {
@@ -210,7 +240,10 @@ public class DoubleGrid {
     } else if (duplicateModeActive) {
       bindActionsToGrid(ActionID.ClipDuplicate, null);
       doubleGridState = DoubleGridState.DuplicateMode;
-
+    } else if (copyModeActive){
+      bindActionsToGrid(ActionID.ClipCopy, null);
+    } else if (pasteModeActive){
+      bindActionsToGrid(ActionID.ClipPaste, null);
     } else {
       if (altLaunchModeActive) {
         bindLaunchAlt();
@@ -220,6 +253,8 @@ public class DoubleGrid {
         doubleGridState = DoubleGridState.LaunchMode;
       }
     }
+
+
 
     //Update State Observers
     gridStatus.forEach(track -> track.forEach(gridStatus -> gridStatus.setGridState(doubleGridState)));
@@ -252,7 +287,7 @@ public class DoubleGrid {
     } else {
       hardware.getSceneButton(ButtonIndexes.Delete).setState(GridButtonColor.DeleteHasClip);
     }
-    
+
 
   }
 
@@ -292,6 +327,19 @@ public class DoubleGrid {
         actions.put(ActionID.ClipStop, clipLauncherSlotBank.stopAction());
         actions.put(ActionID.ClipAltStop, clipLauncherSlotBank.stopAltAction());
         actions.put(ActionID.ClipDuplicate, host.createAction(clipLauncherSlot::duplicateClip, () -> "Duplicate Clip"));
+
+        int finalRowIndex = rowIndex;
+        actions.put(ActionID.ClipCopy, host.createAction(() -> {
+          copySlots.setCursor(cursorTrack);
+          copySlots.setSlot(finalRowIndex);
+        }, () -> "Copy Clip"));
+
+        actions.put(ActionID.ClipPaste, host.createAction(() -> {
+          ClipLauncherSlot slot = copySlots.getSlot();
+          if (slot != null) {
+            clipLauncherSlot.replaceInsertionPoint().copySlotsOrScenes(slot);
+          }
+        }, () -> "Paste Clip"));
 
         //Scene
         Scene scene = sceneLauncher.getScene(rowIndex);
@@ -403,6 +451,6 @@ public class DoubleGrid {
     ClipAltStop,
     ClipDelete,
     RecordMode,
-    ClipDuplicate;
+    ClipDuplicate, ClipCopy, ClipPaste;
   }
 }
