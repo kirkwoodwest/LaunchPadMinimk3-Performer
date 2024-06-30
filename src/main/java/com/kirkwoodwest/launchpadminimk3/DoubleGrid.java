@@ -26,6 +26,7 @@ public class DoubleGrid {
   private boolean altLaunchModeActive;
   private boolean stopModeActive;
   private boolean recordModeActive;
+  private boolean duplicateModeActive;
   private final Transport transport;
   private boolean deleteModeActive;
 
@@ -145,6 +146,17 @@ public class DoubleGrid {
     HardwareActionBindable deleteModeInactiveAction = host.createAction(() -> setDeleteMode(false), () -> "Delete Mode Inactive");
     hardware.getSceneButton(ButtonIndexes.Delete).getButton().pressedAction().addBinding(deleteModeActiveAction);
     hardware.getSceneButton(ButtonIndexes.Delete).getButton().releasedAction().addBinding(deleteModeInactiveAction);
+
+    //Duplicate Mode
+    HardwareActionBindable duplicateModeActiveAction = host.createAction(() -> setDuplicateMode(true), () -> "Duplicate Mode Active");
+    HardwareActionBindable duplicateModeInactiveAction = host.createAction(() -> setDuplicateMode(false), () -> "Duplicate Mode Inactive");
+    hardware.getSceneButton(ButtonIndexes.Duplicate).getButton().pressedAction().addBinding(duplicateModeActiveAction);
+    hardware.getSceneButton(ButtonIndexes.Duplicate).getButton().releasedAction().addBinding(duplicateModeInactiveAction);
+  }
+
+  private void setDuplicateMode(boolean b) {
+    duplicateModeActive = b;
+    updateState();
   }
 
   private void setDeleteMode(boolean b) {
@@ -187,14 +199,18 @@ public class DoubleGrid {
         bindSceneButtonsClips();
         doubleGridState = DoubleGridState.SceneMode;
       }
-    } else if (recordModeActive){
+    } else if (recordModeActive) {
       if (altLaunchModeActive) {
         bindRecordMode();
         doubleGridState = DoubleGridState.RecordAltMode;
       } else {
         bindRecordMode();
         doubleGridState = DoubleGridState.RecordMode;
-    }
+      }
+    } else if (duplicateModeActive) {
+      bindActionsToGrid(ActionID.ClipDuplicate, null);
+      doubleGridState = DoubleGridState.DuplicateMode;
+
     } else {
       if (altLaunchModeActive) {
         bindLaunchAlt();
@@ -236,6 +252,7 @@ public class DoubleGrid {
     } else {
       hardware.getSceneButton(ButtonIndexes.Delete).setState(GridButtonColor.DeleteHasClip);
     }
+    
 
   }
 
@@ -274,6 +291,8 @@ public class DoubleGrid {
         actions.put(ActionID.ClipAltLaunchRelease, clipLauncherSlot.launchReleaseAltAction());
         actions.put(ActionID.ClipStop, clipLauncherSlotBank.stopAction());
         actions.put(ActionID.ClipAltStop, clipLauncherSlotBank.stopAltAction());
+        actions.put(ActionID.ClipDuplicate, host.createAction(clipLauncherSlot::duplicateClip, () -> "Duplicate Clip"));
+
         //Scene
         Scene scene = sceneLauncher.getScene(rowIndex);
         actions.put(ActionID.SceneLaunch, scene.sceneLaunch());
@@ -367,6 +386,7 @@ public class DoubleGrid {
     static final int Stop = 4;
     static final int Record = 5;
     static final int Delete = 6;
+    public static int Duplicate = 7;
   }
 
   // ActionID Enum
@@ -382,6 +402,7 @@ public class DoubleGrid {
     ClipStop,
     ClipAltStop,
     ClipDelete,
-    RecordMode;
+    RecordMode,
+    ClipDuplicate;
   }
 }

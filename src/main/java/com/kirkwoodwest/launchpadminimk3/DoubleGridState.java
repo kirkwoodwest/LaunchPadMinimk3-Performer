@@ -10,4 +10,5 @@ public enum DoubleGridState {
   RecordAltMode,
   RecordMode,
   DeleteMode,
+  DuplicateMode,
 }
