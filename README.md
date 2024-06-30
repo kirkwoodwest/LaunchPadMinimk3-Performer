@@ -56,6 +56,7 @@ Also special thanks to minortom & carlcaulkett on the #controllerism channel for
 
 # License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project uses Jackson, a JSON library for Java. Jackson is licensed under the Apache License 2.0.
 
 # Acknowledgments
 - Novation for making the Launchpad Mini Mk3, Bitwig Studio for making awesome DAW and API, n9research for assisting with design, and the Bitwig Community for the support.

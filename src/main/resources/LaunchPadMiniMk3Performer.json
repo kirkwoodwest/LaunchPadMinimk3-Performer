@@ -1,4 +1,7 @@
 {
+  "scenes": {
+    "LaunchEntireRow": true,
+  },
   "colors":{
     "Off": [0, 0],
     "HasClip": [103, 0],

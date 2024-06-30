@@ -12,7 +12,7 @@ public class LaunchPadMiniExtensionDefinition extends ControllerExtensionDefinit
 
     @Override
     public String getName() {
-        return "Launchpad Mini Mk3 - Performer";
+        return "Launchpad Mini Mk3 (Performer)";
     }
 
     @Override
@@ -22,7 +22,7 @@ public class LaunchPadMiniExtensionDefinition extends ControllerExtensionDefinit
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "0.5a";
     }
 
     @Override
@@ -57,7 +57,22 @@ public class LaunchPadMiniExtensionDefinition extends ControllerExtensionDefinit
 
     @Override
     public void listAutoDetectionMidiPortNames(AutoDetectionMidiPortNamesList list, PlatformType platformType) {
-        // Implementation here if needed
+        if(platformType == PlatformType.WINDOWS)
+        {
+            list.add(new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI Out"}, new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI In"});
+        }
+        else if(platformType == PlatformType.MAC)
+        {
+            list.add(new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI Out"}, new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI In"});
+        }
+        else if(platformType == PlatformType.LINUX)
+        {
+            list.add(new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI Out"}, new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI In"});
+        }
+        else
+        {
+            list.add(new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI Out"}, new String[]{"Launchpad Mini MK3 LPMiniMK3 MIDI In"});
+        }
     }
 
     @Override

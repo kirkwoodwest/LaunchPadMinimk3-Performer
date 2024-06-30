@@ -18,6 +18,7 @@ public class DoubleGrid {
   private final List<ClipLauncherSlotBank> clipLauncherSlotBanks = new ArrayList<>();
   private final SceneLauncher sceneLauncher;
   private final Fill fill;
+  private final SceneBank sceneBank;
   private boolean launchSceneModeActive;
   private final Map<ActionID, HardwareActionBindable>[][] clipButtonActions;
   private ArrayList<ArrayList<GridStatus>> gridStatus;
@@ -35,12 +36,17 @@ public class DoubleGrid {
     this.cursorTrackList = cursorTrackList;
     this.hardware = hardware;
 
+    //Indicate where the scenes are
+    this.sceneBank = host.createSceneBank(4);
+    this.sceneBank.scrollPosition().markInterested();
+    sceneBank.setIndication(true);
+
     //Fill
     fill = new Fill(host, host.createTransport());
 
-
     for (int i = 0; i < cursorTrackList.size(); i++) {
-      clipLauncherSlotBanks.add(cursorTrackList.get(i).clipLauncherSlotBank());
+      ClipLauncherSlotBank clipLauncherSlotBank = cursorTrackList.get(i).clipLauncherSlotBank();
+      clipLauncherSlotBanks.add(clipLauncherSlotBank);
     }
 
     this.launchSceneModeActive = false;
@@ -58,7 +64,6 @@ public class DoubleGrid {
     this.transport = host.createTransport();
     this.transport.isClipLauncherOverdubEnabled().markInterested();
     this.transport.isClipLauncherAutomationWriteEnabled().markInterested();
-
 
     //Create Scene Launcher
     sceneLauncher = new SceneLauncher(host, 4, clipLauncherSlotBanks);
@@ -343,10 +348,12 @@ public class DoubleGrid {
 
   public void moveClipLauncher(int direction) {
     int steps = direction * 4;
+    this.sceneBank.scrollPosition().set(this.sceneBank.scrollPosition().get() + steps);
     for (int trackIndex = 0; trackIndex < cursorTrackList.size(); trackIndex++) {
       ClipLauncherSlotBank clipLauncherSlotBank = clipLauncherSlotBanks.get(trackIndex);
       int index = clipLauncherSlotBank.scrollPosition().get();
       clipLauncherSlotBank.scrollPosition().set(index + steps);
+
     }
   }
 
